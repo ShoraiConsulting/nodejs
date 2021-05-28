@@ -29,7 +29,3 @@ RUN dnf update -q -y && \
   postgresql \
   which && \
   dnf clean all
-
-ENV CYPRESS_CACHE_FOLDER=/tmp/.cache
-RUN npm install --quiet -g cypress@^5.4 >> /dev/null && \
-  rm -rf /tmp/.cache
