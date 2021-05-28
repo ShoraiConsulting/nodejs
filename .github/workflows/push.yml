@@ -19,10 +19,6 @@ jobs:
       packages: write
       contents: read
 
-    strategy:
-      matrix:
-        node: [10, 12, 14]
-
     steps:
       - uses: actions/checkout@v2
 
