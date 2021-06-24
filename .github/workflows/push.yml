@@ -18,6 +18,10 @@ jobs:
       packages: write
       contents: read
 
+    strategy:
+      matrix:
+        node: [10, 12, 14]
+
     steps:
       - uses: actions/checkout@v2
 
@@ -27,14 +31,20 @@ jobs:
           config: hadolint-ci.yaml
 
       - name: Build image
-        run: docker-compose -f docker-compose.yml build
+        run: docker-compose -f docker-compose.yml build node${{ matrix.node }}
 
       - name: Log into registry
         # This is where you will update the PAT to GITHUB_TOKEN
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push image
-        run: docker-compose -f docker-compose.yml push
+        run: docker-compose -f docker-compose.yml push node${{ matrix.node }}
+
+      - name: Tag build-versioned image
+        run: docker tag ghcr.io/katarti/nodejs:${{ matrix.node }} ghcr.io/katarti/nodejs:${{ matrix.node }}-${{ github.run_number }}
+
+      - name: Push versioned image
+        run: docker push ghcr.io/katarti/nodejs:${{ matrix.node }}-${{ github.run_number }}
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
