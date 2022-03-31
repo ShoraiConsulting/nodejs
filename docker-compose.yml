@@ -4,16 +4,16 @@ services:
     build:
       args:
         NODE_VERSION: 12
-    image: ghcr.io/shoraiconsulting/nodejs:12
+    image: ${IMAGE:-nodejs}:12
 
   node14:
     build:
       args:
         NODE_VERSION: 14
-    image: ghcr.io/shoraiconsulting/nodejs:14
+    image: ${IMAGE:-nodejs}:14
 
   node16:
     build:
       args:
         NODE_VERSION: 16
-    image: ghcr.io/shoraiconsulting/nodejs:16
+    image: ${IMAGE:-nodejs}:16
