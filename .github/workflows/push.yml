@@ -1,13 +1,15 @@
 name: Docker build and push
-on:   
+on:
   push:
     branches:
       - master
+  pull_request:
   schedule:
     - cron: "0 2 * * 0"
 
 env:
   IMAGE_NAME: nodejs
+  DOCKER_BUILDKIT: 1
 
 jobs:
   push:
@@ -18,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [10, 12, 14]
+        node: [12, 14, 16]
 
     steps:
       - uses: actions/checkout@v2
@@ -30,32 +32,37 @@ jobs:
 
       - name: Build image
         run: docker-compose -f docker-compose.yml build node${{ matrix.node }}
+        if: github.event_name != 'pull_request'
 
       - name: Log into registry
         # This is where you will update the PAT to GITHUB_TOKEN
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        if: github.event_name != 'pull_request'
 
       - name: Push image
         run: docker-compose -f docker-compose.yml push node${{ matrix.node }}
+        if: github.event_name != 'pull_request'
 
       - name: Tag build-versioned image
-        run: docker tag ghcr.io/katarti/nodejs:${{ matrix.node }} ghcr.io/katarti/nodejs:${{ matrix.node }}-${{ github.run_number }}
+        run: docker tag ghcr.io/shoraiconsulting/nodejs:${{ matrix.node }} ghcr.io/shoraiconsulting/nodejs:${{ matrix.node }}-${{ github.run_number }}
+        if: github.event_name != 'pull_request'
 
       - name: Push versioned image
-        run: docker push ghcr.io/katarti/nodejs:${{ matrix.node }}-${{ github.run_number }}
+        run: docker push ghcr.io/shoraiconsulting/nodejs:${{ matrix.node }}-${{ github.run_number }}
+        if: github.event_name != 'pull_request'
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
-        if: ${{ success() }}
+        if: ${{ success() && (github.event_name != 'pull_request') }}
         env:
           SLACK_WEBHOOK: ${{ secrets.BUILD_NOTIFY_SLACK }}
           SLACK_COLOR: green
           SLACK_MESSAGE: 'Good luck, this time... :rocket:'
           SLACK_TITLE: Build successful
-      
+
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
-        if: ${{ failure() }}
+        if: ${{ failure() && (github.event_name != 'pull_request') }}
         env:
           SLACK_WEBHOOK: ${{ secrets.BUILD_NOTIFY_SLACK }}
           SLACK_COLOR: red
