@@ -7,7 +7,7 @@ ARG NODE_VERSION=16
 ENV npm_config_loglevel warn
 ENV npm_config_unsafe_perm true
 
-RUN microdnf install -y fedora-repos-modular-35 && \
+RUN microdnf install -y fedora-repos-modular && \
   microdnf module enable -y nodejs:${NODE_VERSION} && \
   microdnf update -y && \
   microdnf --nodocs -y install \
