@@ -2,24 +2,24 @@ name: Docker build and push
 on:
   push:
     branches:
-      - master
+      - main
+      - feature/new_node_setup
   pull_request:
   schedule:
     - cron: "0 2 * * 0"
 
 env:
   DOCKER_BUILDKIT: 1
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   main:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
 
     strategy:
       matrix:
-        node: [14, 16]
+        node: [16,18,20]
 
     steps:
       - uses: actions/checkout@v3
@@ -29,43 +29,27 @@ jobs:
           dockerfile: Dockerfile
           config: hadolint-ci.yaml
 
-      - name: Set image name
-        run: |
-          echo "DOCKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/nodejs" >> ${GITHUB_ENV}
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build image
-        run: docker-compose -f docker-compose.yml build node${{ matrix.node }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Tag image
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        run: |
-          docker tag nodejs:${{ matrix.node }} ${DOCKER_IMAGE}:${{ matrix.node }}
-          docker tag nodejs:${{ matrix.node }} ${DOCKER_IMAGE}:${{ matrix.node }}-${{ github.run_number }}
-
-      - name: Log into registry
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Push images
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        run: |
-          docker push ${DOCKER_IMAGE}:${{ matrix.node }}
-          docker push ${DOCKER_IMAGE}:${{ matrix.node }}-${{ github.run_number }}
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        if: ${{ success() }}
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: green
-          SLACK_MESSAGE: 'Good luck, this time... :rocket:'
-          SLACK_TITLE: Build successful
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        if: ${{ failure() }}
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: red
-          SLACK_MESSAGE: 'Seems whatever you did failed :unrocket:'
-          SLACK_TITLE: Build failed
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max 
+          build-args: |
+            NODE_VERSION: ${{ matrix.node }}
