@@ -10,8 +10,7 @@ ENV npm_config_loglevel warn
 ENV npm_config_unsafe_perm true
 
 RUN microdnf --nodocs -y upgrade && \    
-    curl -sL https://rpm.nodesource.com/pub_${NODEJS_VERSION}.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -o /tmp/nodejs.rpm && \
-    rpm -i /tmp/nodejs.rpm && \
+    rpm -i https://rpm.nodesource.com/pub_${NODEJS_VERSION}.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm && \
     microdnf --nodocs -y install \
     autoconf \
     automake \
