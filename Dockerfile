@@ -1,15 +1,16 @@
-FROM registry.fedoraproject.org/fedora-minimal:35
+FROM rockylinux:9-minimal
 
-SHELL ["/bin/bash", "-l", "-c"]
+RUN microdnf install --nodocs -y crypto-policies-scripts && \
+    update-crypto-policies --set DEFAULT:SHA1 && \
+    microdnf clean all
 
-ARG NODE_VERSION=16
+ARG NODEJS_VERSION=20
 
 ENV npm_config_loglevel warn
 ENV npm_config_unsafe_perm true
 
-RUN microdnf --nodocs -y upgrade && \
-    microdnf --nodocs -y install fedora-repos-modular && \
-    microdnf module enable -y nodejs:${NODE_VERSION} && \
+RUN microdnf --nodocs -y upgrade && \    
+    rpm -i https://rpm.nodesource.com/pub_${NODEJS_VERSION}.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm && \
     microdnf --nodocs -y install \
     autoconf \
     automake \
@@ -28,4 +29,4 @@ RUN microdnf --nodocs -y upgrade && \
     which && \
     microdnf --nodocs reinstall -y tzdata && \
     microdnf clean all && \
-    rm -rf /var/cache/*
+    rm -rf /var/cache/* /tmp/*
