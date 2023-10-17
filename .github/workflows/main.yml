@@ -58,11 +58,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=auto
-            prefix=${{ matrix.node }}
+            latest=false
           tags: |
             type=schedule,pattern=${{ matrix.node }}
-            type=ref,event=branch
+            type=raw,value=${{ matrix.node }},enable={{is_default_branch}}
+            type=raw,value=${{ matrix.node }}-${{ github.run_number }},enable={{is_default_branch}}
             type=sha
 
       - name: Build and push Docker image
