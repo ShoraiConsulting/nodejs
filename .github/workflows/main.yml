@@ -2,11 +2,23 @@ name: Docker build and push
 on:
   push:
     branches:
-      - main
-      - feature/new_node_setup
-  pull_request:
+      - master
   schedule:
-    - cron: "0 2 * * 0"
+    - cron: 0 2 * * 0
+permissions:
+  actions: write
+  checks: write
+  contents: read
+  deployments: read
+  id-token: none
+  issues: none
+  discussions: none
+  packages: write
+  pages: none
+  pull-requests: write
+  repository-projects: none
+  security-events: write
+  statuses: write
 
 env:
   DOCKER_BUILDKIT: 1
@@ -19,15 +31,15 @@ jobs:
 
     strategy:
       matrix:
-        node: [16,18,20]
+        node: [16, 18, 20]
 
     steps:
       - uses: actions/checkout@v3
 
-      - uses: hadolint/hadolint-action@v2.0.0
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
         with:
-          dockerfile: Dockerfile
-          config: hadolint-ci.yaml
+          check-mode: populate_cache_only
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -44,6 +56,13 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=auto
+            prefix=${{ matrix.node }}
+          tags: |
+            type=schedule,pattern=${{ matrix.node }}
+            type=ref,event=branch
+            type=sha
 
       - name: Build and push Docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -53,6 +72,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max 
+          cache-to: type=gha,mode=max
           build-args: |
             NODE_VERSION: ${{ matrix.node }}

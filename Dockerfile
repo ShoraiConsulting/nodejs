@@ -1,7 +1,8 @@
 FROM rockylinux:9-minimal
 
 RUN microdnf install --nodocs -y crypto-policies-scripts && \
-    update-crypto-policies --set DEFAULT:SHA1
+    update-crypto-policies --set DEFAULT:SHA1 && \
+    microdnf clean all
 
 ARG NODEJS_VERSION=20
 
