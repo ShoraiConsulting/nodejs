@@ -60,9 +60,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=schedule,pattern=${{ matrix.node }}
-            type=raw,value=${{ matrix.node }},enable={{is_default_branch}}
-            type=raw,value=${{ matrix.node }}-${{ github.run_number }},enable={{is_default_branch}}
+            type=raw,value=${{ matrix.node }},enable=true
+            type=raw,value=${{ matrix.node }}-${{ github.run_number }},enable=true
             type=sha
 
       - name: Build and push Docker image
