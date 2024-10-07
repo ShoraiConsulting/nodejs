@@ -1,3 +1,4 @@
+
 FROM rockylinux:9-minimal
 
 RUN microdnf install --nodocs -y crypto-policies-scripts && \
