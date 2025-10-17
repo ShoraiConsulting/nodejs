@@ -5,7 +5,7 @@ RUN microdnf install --nodocs -y crypto-policies-scripts && \
     update-crypto-policies --set DEFAULT:SHA1 && \
     microdnf clean all
 
-ARG NODEJS_VERSION=20
+ARG NODE_VERSION=20
 
 ENV npm_config_loglevel warn
 ENV npm_config_unsafe_perm true
