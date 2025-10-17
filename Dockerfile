@@ -13,7 +13,7 @@ ENV npm_config_unsafe_perm true
 COPY <<EOT /etc/yum.repos.d/nodesource.repo
 [nodesource-nodejs]
 name=Node.js Packages for Linux RPM based distros
-baseurl=https://rpm.nodesource.com/pub_${NODEJS_VERSION}.x/nodistro/nodejs/x86_64
+baseurl=https://rpm.nodesource.com/pub_${NODE_VERSION}.x/nodistro/nodejs/x86_64
 priority=9
 enabled=1
 gpgcheck=1
